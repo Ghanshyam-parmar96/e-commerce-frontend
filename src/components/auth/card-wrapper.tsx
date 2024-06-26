@@ -16,6 +16,7 @@ interface CardWrapperProps {
   headerLabel: string;
   backButtonLabel: string;
   backButtonHref: string;
+  socialLabel: string;
   showSocial?: boolean;
 }
 
@@ -24,10 +25,11 @@ export default function CardWrapper({
   backButtonHref,
   backButtonLabel,
   headerLabel,
+  socialLabel,
   showSocial,
 }: CardWrapperProps) {
   return (
-    <Card className="w-96 shadow-md">
+    <Card className="shadow-md">
       <CardHeader>
         <Header label={headerLabel} />
       </CardHeader>
@@ -35,7 +37,7 @@ export default function CardWrapper({
       <FormSeparator label="Or continue with" />
       {showSocial && (
         <CardFooter className="pt-2">
-          <Social label="Login with Google" />
+          <Social label={socialLabel} />
         </CardFooter>
       )}
       <CardFooter>

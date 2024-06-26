@@ -1,5 +1,35 @@
 import * as z from "zod";
 
+const passwordStrengthSchema = z.string().superRefine((password, ctx) => {
+  const length = password.length;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  if (length < 8) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password must be at least 8 characters long.",
+    });
+  } else {
+    if (
+      !(
+        (hasUpper && hasLower && hasDigit) ||
+        (hasUpper && hasLower && hasSpecial) ||
+        (hasUpper && hasDigit && hasSpecial) ||
+        (hasLower && hasDigit && hasSpecial)
+      )
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Password must contain at least three types of characters: uppercase, lowercase, digits, special characters.",
+      });
+    }
+  }
+});
+
 export const LoginSchema = z.object({
   email: z.string({ required_error: "email is required" }).email(),
   password: z
@@ -7,13 +37,17 @@ export const LoginSchema = z.object({
     .min(8, { message: "Must be 8 or more characters long" }),
 });
 
-/*
-  export const LoginSchema = z
+export const RegisterSchema = z
   .object({
+    fullName: z.string({ required_error: "name is required" }),
     email: z.string({ required_error: "email is required" }).email(),
-    password: z
-      .string({ required_error: "password is required" })
-      .min(8, { message: "Must be 8 or more characters long" }),
+    gender: z
+      .enum(["male", "female"], {
+        required_error: "Gender is required",
+      })
+      .optional(),
+    DOB: z.date().optional(),
+    password: passwordStrengthSchema,
     confirmPassword: z.string({
       required_error: "confirm password is required",
     }),
@@ -22,4 +56,3 @@ export const LoginSchema = z.object({
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
-  */

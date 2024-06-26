@@ -21,6 +21,7 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import * as z from "zod";
 import "react-toastify/dist/ReactToastify.css";
+import Link from "next/link";
 
 export const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -67,6 +68,7 @@ export const Login = () => {
       headerLabel="Welcome back"
       backButtonLabel="Don't have an account?"
       backButtonHref="/auth/register"
+      socialLabel="Login with Google"
       showSocial
     >
       <Form {...form}>
@@ -74,7 +76,7 @@ export const Login = () => {
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-5"
         >
-          <div className="space-y-3">
+          <div className="space-y-3 w-72">
             <FormField
               name="email"
               control={form.control}
@@ -98,7 +100,15 @@ export const Login = () => {
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <div className="flex items-center">
+                    <FormLabel>Password</FormLabel>
+                    <Link
+                      href="/auth/forgot-password"
+                      className="ml-auto inline-block text-xs tracking-wide underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                   <FormControl>
                     <PasswordInput
                       placeholder="**********"
