@@ -62,3 +62,22 @@ export const AccountVerificationSchema = z.object({
     message: "Your one-time password must be 6 characters.",
   }),
 });
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string({ required_error: "email is required" }).email(),
+});
+
+export const GenerateNewPasswordSchema = z
+  .object({
+    verifyCode: z.string().min(6, {
+      message: "Your one-time password must be 6 characters.",
+    }),
+    password: passwordStrengthSchema,
+    confirmPassword: z.string({
+      required_error: "confirm password is required",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
