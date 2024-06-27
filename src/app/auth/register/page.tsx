@@ -30,9 +30,8 @@ import { format } from "date-fns";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import * as z from "zod";
-import "react-toastify/dist/ReactToastify.css";
 
-export const Register = () => {
+const Register = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const form = useForm<z.infer<typeof RegisterSchema>>({

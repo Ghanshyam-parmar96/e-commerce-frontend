@@ -56,3 +56,9 @@ export const RegisterSchema = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
+
+export const AccountVerificationSchema = z.object({
+  verifyCode: z.string().min(6, {
+    message: "Your one-time password must be 6 characters.",
+  }),
+});

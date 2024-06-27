@@ -20,10 +20,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import * as z from "zod";
-import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 
-export const Login = () => {
+const Login = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const form = useForm<z.infer<typeof LoginSchema>>({

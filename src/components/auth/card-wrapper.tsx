@@ -34,11 +34,13 @@ export default function CardWrapper({
         <Header label={headerLabel} />
       </CardHeader>
       <CardContent className="pb-3">{children}</CardContent>
-      <FormSeparator label="Or continue with" />
       {showSocial && (
-        <CardFooter className="pt-2">
-          <Social label={socialLabel} />
-        </CardFooter>
+        <>
+          <FormSeparator label="Or continue with" />
+          <CardFooter className="pt-2">
+            <Social label={socialLabel} />
+          </CardFooter>
+        </>
       )}
       <CardFooter>
         <BackButton
