@@ -81,3 +81,18 @@ export const GenerateNewPasswordSchema = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
+
+export const ResetPasswordSchema = z
+  .object({
+    oldPassword: z.string().min(6, {
+      message: "Your old password must be 6 characters.",
+    }),
+    password: passwordStrengthSchema,
+    confirmPassword: z.string({
+      required_error: "confirm password is required",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });

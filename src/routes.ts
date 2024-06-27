@@ -4,7 +4,7 @@
  * @type {string[]}
  */
 
-export const publicRoutes = ["/"];
+export const publicRoutes = ["/", "/auth/reset-password"];
 
 /**
  * An array of routes that are user for Authentication
