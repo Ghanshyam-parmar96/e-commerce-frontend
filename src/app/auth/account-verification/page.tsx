@@ -14,6 +14,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import CardWrapper from "@/components/auth/card-wrapper";
+import { resendEmailOtp, verifyAccountAction } from "@/action/authAction";
 import { AccountVerificationSchema } from "@/schemas/auth-schema";
 import { Component1Icon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useTransition } from "react";
 import * as z from "zod";
 
 interface AccountVerificationProps {
@@ -31,8 +32,7 @@ interface AccountVerificationProps {
 }
 
 const AccountVerification = ({ searchParams }: AccountVerificationProps) => {
-  const [loading, setLoading] = useState(false);
-  const [resend, setResend] = useState(false);
+  const [loading, starTransition] = useTransition();
   const router = useRouter();
   const form = useForm<z.infer<typeof AccountVerificationSchema>>({
     resolver: zodResolver(AccountVerificationSchema),
@@ -45,64 +45,37 @@ const AccountVerification = ({ searchParams }: AccountVerificationProps) => {
     const isUser = localStorage.hasOwnProperty("userId");
 
     if (!isUser) return;
-    const id = isUser && localStorage.getItem("userId");
+    const id = isUser && JSON.parse(localStorage.getItem("userId") as string);
+    starTransition(async () => {
+      const { message, success } = await resendEmailOtp(id);
 
-    setResend(true);
-    try {
-      const response = await fetch(
-        `${process.env.BACKEND_URI}/user/me/resend-otp/${id}`
-      );
-      const value = await response.json();
-
-      if (!response.ok) {
-        toast.error(value.message);
+      if (!success) {
+        toast.error(message);
         return;
       }
 
       toast.success("Email has been sent");
-    } catch (error) {
-      console.error("error while resend email ", error);
-    } finally {
-      setResend(false);
-    }
+    });
   };
 
   const onSubmit = async (data: z.infer<typeof AccountVerificationSchema>) => {
     const isUser = localStorage.hasOwnProperty("userId");
 
     if (!isUser) return;
-    const id = isUser && localStorage.getItem("userId");
+    const id = isUser && JSON.parse(localStorage.getItem("userId") as string);
 
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${process.env.BACKEND_URI}/user/me/verify/${id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ verifyCode: Number(data.verifyCode) }),
-          credentials: "include",
-          cache: "no-store",
-        }
-      );
-      const value = await response.json();
+    starTransition(async () => {
+      const { message, success } = await verifyAccountAction(data, id);
 
-      if (!response.ok) {
-        toast.error(value.message);
+      if (!success) {
+        toast.error(message);
         return;
       }
 
       toast.success("Account has been verified");
       localStorage.removeItem("userId");
-      localStorage.setItem("user", JSON.stringify(value.data));
-      router.push("/");
-    } catch (error) {
-      console.error("An error occurred while verifying account ", error);
-    } finally {
-      setLoading(false);
-    }
+      router.replace("/");
+    });
   };
 
   return (
@@ -130,7 +103,7 @@ const AccountVerification = ({ searchParams }: AccountVerificationProps) => {
                       variant="link"
                       type="button"
                       onClick={resendEmailHandler}
-                      disabled={resend || loading}
+                      disabled={loading}
                     >
                       Resend OTP
                     </Button>
@@ -158,7 +131,7 @@ const AccountVerification = ({ searchParams }: AccountVerificationProps) => {
           <Button
             className="w-full"
             type="submit"
-            disabled={loading || resend}
+            disabled={loading}
           >
             {loading ? (
               <span className="flex items-center justify-center gap-3">

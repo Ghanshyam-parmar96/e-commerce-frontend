@@ -96,3 +96,14 @@ export const ResetPasswordSchema = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
+
+export const googleAuthSchema = z.object({
+  isAdmin: z.boolean(),
+  isVerified: z.boolean(),
+  _id: z.string(),
+  fullName: z.string(),
+  email: z.string(),
+  avatar: z.string(),
+  accessToken: z.string(),
+  refreshToken: z.string(),
+});

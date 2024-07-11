@@ -9,19 +9,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import CardWrapper from "@/components/auth/card-wrapper";
+import { PasswordInput } from "@/components/ui/password-input";
 import { ResetPasswordSchema } from "@/schemas/auth-schema";
+import { resetPasswordAction } from "@/action/authAction";
 import { Component1Icon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useTransition } from "react";
 import * as z from "zod";
-import { PasswordInput } from "@/components/ui/password-input";
 
 const ResetPassword = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, startTransition] = useTransition();
   const router = useRouter();
   const form = useForm<z.infer<typeof ResetPasswordSchema>>({
     resolver: zodResolver(ResetPasswordSchema),
@@ -33,38 +34,16 @@ const ResetPassword = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof ResetPasswordSchema>) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${process.env.BACKEND_URI}/user/me/change-password`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            oldPassword: data.oldPassword,
-            newPassword: data.password,
-          }),
-          credentials: "include",
-          cache: "no-store",
-        }
-      );
-      const value = await response.json();
+    startTransition(async () => {
+      const { message, success } = await resetPasswordAction(data);
 
-      if (!response.ok) {
-        toast.error(value.message);
+      if (!success) {
+        toast.error(message);
         return;
       }
-
-      toast.success(value.message);
-      localStorage.setItem("user", JSON.stringify(value.data));
+      toast.success(message);
       router.back();
-    } catch (error) {
-      console.error("An error occurred while verifying account ", error);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (

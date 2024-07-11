@@ -13,17 +13,18 @@ import CardWrapper from "@/components/auth/card-wrapper";
 import { Component1Icon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginSchema } from "@/schemas/auth-schema";
+import { loginAction } from "@/action/authAction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useTransition } from "react";
 import * as z from "zod";
 import Link from "next/link";
 
 const Login = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, starTransition] = useTransition();
   const router = useRouter();
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -34,32 +35,19 @@ const Login = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof LoginSchema>) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${process.env.BACKEND_URI}/user/log-in`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-        credentials: "include",
-        cache: "no-store",
-      });
-      const value = await response.json();
+    starTransition(async () => {
+      const { message, success, isAdmin } = await loginAction(data);
 
-      if (!response.ok) {
-        toast.error(value.message);
+      if (!success) {
+        toast.error(message);
         return;
       }
 
-      localStorage.setItem("user", JSON.stringify(value.data));
-      toast.success(value.message);
-      router.replace("/");
-    } catch (error: any) {
-      console.error("error on login Form", error);
-    } finally {
-      setLoading(false);
-    }
+      // Redirect to dashboard if user is admin, otherwise to home page
+      toast.success(message);
+      form.reset();
+      router.replace(isAdmin ? "/dashboard" : "/");
+    });
   };
 
   return (
@@ -103,7 +91,7 @@ const Login = () => {
                     <FormLabel>Password</FormLabel>
                     <Link
                       href="/auth/forgot-password"
-                      className="ml-auto inline-block text-xs tracking-wide underline"
+                      className="ml-auto inline-block text-[11px] text-sky-600 tracking-wide underline"
                     >
                       Forgot password?
                     </Link>

@@ -15,16 +15,17 @@ import {
 } from "@/components/ui/input-otp";
 import CardWrapper from "@/components/auth/card-wrapper";
 import { GenerateNewPasswordSchema } from "@/schemas/auth-schema";
+import { PasswordInput } from "@/components/ui/password-input";
+import { FormSeparator } from "@/components/ui/form-separator";
+import { generateNewPasswordAction } from "@/action/authAction";
 import { Component1Icon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useTransition } from "react";
 import * as z from "zod";
-import { PasswordInput } from "@/components/ui/password-input";
-import { FormSeparator } from "@/components/ui/form-separator";
 
 interface AccountVerificationProps {
   searchParams: {
@@ -33,7 +34,7 @@ interface AccountVerificationProps {
 }
 
 const GenerateNewPassword = ({ searchParams }: AccountVerificationProps) => {
-  const [loading, setLoading] = useState(false);
+  const [loading, starTransition] = useTransition();
   const router = useRouter();
   const form = useForm<z.infer<typeof GenerateNewPasswordSchema>>({
     resolver: zodResolver(GenerateNewPasswordSchema),
@@ -50,38 +51,17 @@ const GenerateNewPassword = ({ searchParams }: AccountVerificationProps) => {
     if (!isUser) return;
     const id = isUser && JSON.parse(localStorage.getItem("userId") as string);
 
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${process.env.BACKEND_URI}/user/me/generate-new-password/${id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            newPassword: data.password,
-            resetPasswordToken: Number(data.verifyCode),
-          }),
-          credentials: "include",
-          cache: "no-store",
-        }
-      );
-      const value = await response.json();
-
-      if (!response.ok) {
-        toast.error(value.message);
+    starTransition(async () => {
+      const { message, success } = await generateNewPasswordAction(data, id);
+      if (!success) {
+        toast.error(message);
         return;
       }
 
-      toast.success(value.message);
+      toast.success(message);
       localStorage.removeItem("userId");
       router.replace("/auth/login");
-    } catch (error) {
-      console.error("An error occurred while verifying account ", error);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (

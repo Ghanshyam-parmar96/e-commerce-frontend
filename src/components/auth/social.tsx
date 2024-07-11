@@ -3,13 +3,17 @@
 import { Button } from "@/components/ui/button";
 
 export function Social({ label }: { label: string }) {
+  const handleClick = () => {
+    window.open(`http://localhost:8080/auth/google`, "_self");
+  };
+
   return (
     <div className="flex items-center gap-x-2 w-full">
       <Button
         variant="outline"
         size="lg"
         className="w-full"
-        onClick={() => {}}
+        onClick={handleClick}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

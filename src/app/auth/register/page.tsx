@@ -20,6 +20,7 @@ import { RegisterSchema } from "@/schemas/auth-schema";
 import { Component1Icon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon } from "@radix-ui/react-icons";
+import { registerAction } from "@/action/authAction";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +28,12 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useTransition } from "react";
 import { cn } from "@/lib/utils";
 import * as z from "zod";
 
 const Register = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, starTransition] = useTransition();
   const router = useRouter();
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
@@ -45,7 +46,20 @@ const Register = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof RegisterSchema>) => {
-    console.log(data);
+    starTransition(async () => {
+      const { message, success, userId } = await registerAction(data);
+      if (!success) {
+        toast.error(message);
+        return;
+      }
+
+      localStorage.setItem("userId", JSON.stringify(userId));
+      form.reset();
+      toast.success(message, {
+        autoClose: 10000,
+      });
+      router.replace("/auth/account-verification");
+    });
   };
 
   return (

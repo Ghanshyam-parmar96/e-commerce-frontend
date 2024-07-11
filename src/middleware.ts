@@ -1,35 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authRoutes, publicRoutes, DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { auth, updateSession } from "@/lib/useAuth";
+import { authRoutes, DEFAULT_LOGIN_REDIRECT, publicRoutes } from "@/routes";
 
-const middleware = (request: NextRequest) => {
-  const { nextUrl } = request;
-  const isAuth =
-    request.cookies.has("isAuth") &&
-    JSON.parse(request.cookies.get("isAuth")?.value as string);
+export const middleware = async (request: NextRequest) => {
+  const { isAdmin, isLoggedIn } = await auth(request);
 
-  const isLoggedIn = isAuth && isAuth.loggedOutDate > new Date().valueOf();
+  const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname);
+  const isAuthRoute = authRoutes.includes(request.nextUrl.pathname);
+  const isAdminRoute = request.nextUrl.pathname.startsWith("/dashboard");
 
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
-  const isAuthRoute = authRoutes.includes(nextUrl.pathname);
-
-  if (isAuthRoute) {
-    if (isLoggedIn) {
-      return NextResponse.redirect(
-        new URL(DEFAULT_LOGIN_REDIRECT, request.url)
-      );
+  if (!isLoggedIn) {
+    if (isAuthRoute || isPublicRoute) {
+      return NextResponse.next();
     }
-    return null;
-  }
-
-  if (!isLoggedIn && !isPublicRoute) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
-  return null;
+  if (isLoggedIn && isAuthRoute) {
+    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, request.url));
+  }
+
+  if (!isAdmin && isAdminRoute) {
+    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, request.url));
+  }
+
+  return await updateSession(request);
 };
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
-
-export default middleware;

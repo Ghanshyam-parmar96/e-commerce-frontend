@@ -1,8 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-    env: {
-        BACKEND_URI: "http://localhost:8080/api/v1"
-    },
-};
+const nextConfig = {};
 
 export default nextConfig;
